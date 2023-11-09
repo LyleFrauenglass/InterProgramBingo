@@ -1,55 +1,115 @@
 package application;
 
+import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+public class BingoCard extends GridPane {
+    private BingoSquare[][] squares;
 
-public class BingoCard {
+    public BingoCard(Image[][] images, double imageWidth, double imageHeight) {
+        squares = new BingoSquare[images.length][images[0].length];
 
-    private static final int NUM_ROWS = 5;
-    private static final int NUM_COLS = 5;
-
-    private List<Image> bingoItems;
-
-    public BingoCard() {
-        initializeBingoItems();
-    }
-
-    private void initializeBingoItems() {
-       
-        bingoItems = new ArrayList<>();
-        for (int i = 1; i <= 25; i++) {
-            bingoItems.add(new Image("SimpleLiz.jpg"));
-            bingoItems.add(new Image("SimpleRat.jpg"));
-            bingoItems.add(new Image("SimpleCat.jpg"));
-            bingoItems.add(new Image("SimpleBird.png"));
-        }
-
-        // Shuffle the items for each column
-        Collections.shuffle(bingoItems.subList(0, 5));
-        Collections.shuffle(bingoItems.subList(5, 10));
-        Collections.shuffle(bingoItems.subList(10, 15));
-        Collections.shuffle(bingoItems.subList(15, 20));
-        Collections.shuffle(bingoItems.subList(20, 25));
-    }
-
-    public GridPane createGridPane(int gridSize) {
-        GridPane gridPane = new GridPane();
-
-        for (int row = 0; row < NUM_ROWS; row++) {
-            for (int col = 0; col < NUM_COLS; col++) {
-                ImageView imageView = new ImageView(bingoItems.get(row * NUM_COLS + col));
-                imageView.setFitWidth(100); // Set the size
-                imageView.setFitHeight(100);
-
-                gridPane.add(imageView, col, row);
+        for (int row = 0; row < images.length; row++) {
+            for (int col = 0; col < images[row].length; col++) {
+                squares[row][col] = new BingoSquare(this, images[row][col], imageWidth, imageHeight);// this passes itself in first
+                add(squares[row][col], col, row);
             }
         }
 
-        return gridPane;
+        //Align card
+        setAlignment(Pos.CENTER);
+        setHgap(10);
+        setVgap(10);
+        
+    }
+    //Check for a Bingo
+    public void checkForBingo() {
+        boolean isBingo = checkH() || checkV() || checkD();
+        
+        if (isBingo) {
+            showWinMessage();
+        }
+    }
+
+    //Display win message
+    private void showWinMessage() {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Bingo!");
+        alert.setHeaderText("OMG!");
+        alert.setContentText("You won the bingo game!");
+        alert.showAndWait();
+    }
+    /*
+     * Next step would be to give an option to rest the game and start over whithin
+     * the win message alert.
+     * */
+    
+    //Look ahead on the Horizantls for a bingo
+    private boolean checkH() {
+    	for (int row = 0; row < squares.length; row++) {
+    		for (int col = 0; col <= squares[row].length - 5; col++) {
+    			if (squares[row][col].isClicked()
+    					&& squares[row][col + 1].isClicked()//look ahead one square
+    					&& squares[row][col + 2].isClicked()
+    					&& squares[row][col + 3].isClicked()
+    					&& squares[row][col + 4].isClicked()) {
+    				return true;//___squares in a row
+    			}
+    		}
+    	}
+    	return false;
+    }
+    
+  //Look ahead on the verticals for a bingo
+    private boolean checkV() {
+        for (int col = 0; col < squares[0].length; col++) {
+            for (int row = 0; row <= squares.length - 5; row++) {
+                if (squares[row][col].isClicked()
+                        && squares[row + 1][col].isClicked()
+                        && squares[row + 2][col].isClicked()
+                        && squares[row + 3][col].isClicked()
+                        && squares[row + 4][col].isClicked()) {
+                    return true; 
+                }
+            }
+        }
+        return false;
+    }
+    
+    //Look ahead on the diagonals for a bingo
+    private boolean checkD() {
+        //Check diagonal to the right
+    	for (int row = 0; row <= squares.length - 5; row++) {
+            for (int col = 0; col <= squares[row].length - 5; col++) {
+                if (squares[row][col].isClicked()
+                        && squares[row + 1][col + 1].isClicked()
+                        && squares[row + 2][col + 2].isClicked()
+                        && squares[row + 3][col + 3].isClicked()
+                        && squares[row + 4][col + 4].isClicked()) {
+                    return true; // Four consecutive squares diagonally to the right
+                }
+            }
+        }
+        
+        //Check diagonal to the left
+        for (int row = 0; row <= squares.length - 5; row++) {
+        	for (int col = 4; col < squares[row].length; col++) {
+                if (squares[row][col].isClicked()
+                        && squares[row + 1][col - 1].isClicked()
+                        && squares[row + 2][col - 2].isClicked()
+                        && squares[row + 3][col - 3].isClicked()
+                        && squares[row + 4][col - 4].isClicked()) {
+                    return true; // Four consecutive squares diagonally to the left
+                }
+            }
+        }
+        return false;
+    }
+
+    public BingoSquare[][] getSquares() {
+        return squares;
     }
 }
